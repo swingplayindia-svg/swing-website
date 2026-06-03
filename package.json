@@ -1,0 +1,17 @@
+{
+  "name": "swing-and-all",
+  "version": "1.0.0",
+  "private": true,
+  "description": "swing — game studio website",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "generate-images": "node scripts/generate-sports-images.mjs",
+    "fix-hero-carousels": "node scripts/fix-hero-carousels.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5",
+    "vite": "^6.3.5"
+  }
+}
