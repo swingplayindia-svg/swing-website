@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import fs from 'fs';
+import fs, { cpSync, existsSync } from 'fs';
+
+const staticDirs = ['images', 'js', 'css'];
 
 const htmlPages = [
   'index',
@@ -30,6 +32,17 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      name: 'copy-static-assets',
+      closeBundle() {
+        const outDir = resolve(__dirname, 'dist');
+        for (const dir of staticDirs) {
+          const src = resolve(__dirname, dir);
+          if (!existsSync(src)) continue;
+          cpSync(src, resolve(outDir, dir), { recursive: true });
+        }
+      },
+    },
     {
       name: 'clean-urls',
       configureServer(server) {
