@@ -33,6 +33,13 @@
   function resetSectionLayout(section) {
     section.style.minHeight = "auto";
     section.style.height = "auto";
+
+    document.querySelectorAll(".pin-spacer").forEach(function (spacer) {
+      var pinned = spacer.firstElementChild;
+      if (!pinned || pinned !== section) return;
+      spacer.style.minHeight = "0";
+      spacer.style.height = "auto";
+    });
   }
 
   function patchScrollTriggerOnMobile() {

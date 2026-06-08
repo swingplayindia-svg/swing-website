@@ -113,6 +113,62 @@
  * icon row → feature title → phone mockup → copy → App Store
  */
 @media screen and (max-width: 991px) {
+  /* Hero — fill viewport; flex-end on img-slider was leaving a green gap at top */
+  .hero_wrap.u-section {
+    min-height: 100svh;
+    justify-content: center !important;
+    align-items: stretch !important;
+    background-color: #0d3d6b !important;
+    overflow: hidden;
+  }
+
+  .hero_wrap .u-background-slot {
+    inset: 0;
+    width: 100%;
+    height: 100% !important;
+    min-height: 100% !important;
+  }
+
+  .hero_wrap .img-slider {
+    width: 100%;
+    height: 100% !important;
+    min-height: 100% !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+
+  .hero_wrap .img-slider__list,
+  .hero_wrap .img-slide {
+    width: 100%;
+    height: 100% !important;
+    min-height: 100% !important;
+  }
+
+  .hero_wrap .parallax-demo-bg {
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+  }
+
+  .hero_wrap .img-slide__inner,
+  .hero_wrap [data-slideshow="parallax"] {
+    transform: none !important;
+    object-position: center center;
+  }
+
+  .hero_wrap > .u-container.u-alignment-center {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
   /* Pin section content to top — Webflow uses min-height + vertical centering */
   #games.games_wrap.u-section {
     min-height: auto !important;
