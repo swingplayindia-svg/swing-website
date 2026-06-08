@@ -496,7 +496,6 @@
     min-height: auto !important;
     height: auto !important;
     overflow: visible !important;
-    overflow-x: hidden;
     position: relative;
     display: flex !important;
     flex-direction: column;
@@ -505,21 +504,23 @@
     padding-top: 0;
     padding-bottom: 0.75rem;
     box-sizing: border-box;
+    touch-action: pan-y;
   }
 
   #intro-reveal .bg-pattern-wrap {
     position: absolute;
     inset: 0;
-    height: 100%;
-    min-height: 100%;
+    height: auto;
+    min-height: 0;
+    pointer-events: none;
   }
 
   #intro-reveal .bg_pattern_sticky {
-    position: relative !important;
+    position: static !important;
     top: auto !important;
     width: 100% !important;
-    height: 100% !important;
-    min-height: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
 
@@ -639,6 +640,13 @@
     opacity: 1 !important;
     width: 1.35em !important;
     vertical-align: middle;
+    transform: none !important;
+    max-width: 100%;
+  }
+
+  #intro-reveal .m {
+    display: inline;
+    max-width: 100%;
   }
 
   #games .u-headline-wrapper {
