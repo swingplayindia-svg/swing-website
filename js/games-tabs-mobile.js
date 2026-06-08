@@ -3,6 +3,20 @@
   var activeSection = null;
   var stopAutoplayFn = null;
 
+  function disableSlaterDesktopTabs(section) {
+    if (!MOBILE_MQ.matches) return;
+    var wrapper = section.querySelector('[data-tabs="wrapper"]');
+    if (!wrapper || wrapper.dataset.swingMobileTabs === "true") return;
+    wrapper.removeAttribute("data-tabs");
+    wrapper.dataset.swingMobileTabs = "true";
+
+    section.querySelectorAll('[data-tabs="visual-item"]').forEach(function (item) {
+      item.style.removeProperty("opacity");
+      item.style.removeProperty("visibility");
+      item.style.removeProperty("autoAlpha");
+    });
+  }
+
   function getHeadingText(link) {
     var heading = link.querySelector(".content-item__heading");
     return heading ? heading.textContent.trim() : "";
@@ -65,6 +79,8 @@
   function initGamesTabs() {
     var section = document.getElementById("games");
     if (!section) return;
+
+    disableSlaterDesktopTabs(section);
 
     if (stopAutoplayFn) {
       stopAutoplayFn();
@@ -201,8 +217,14 @@
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initGamesTabs);
+    document.addEventListener("DOMContentLoaded", function () {
+      var section = document.getElementById("games");
+      if (section) disableSlaterDesktopTabs(section);
+      initGamesTabs();
+    });
   } else {
+    var section = document.getElementById("games");
+    if (section) disableSlaterDesktopTabs(section);
     initGamesTabs();
   }
 

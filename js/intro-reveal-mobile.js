@@ -1,8 +1,7 @@
 (function () {
   var MQ = window.matchMedia("(max-width: 991px)");
-  var pollId = null;
-  var pollRuns = 0;
-  var MAX_POLL_RUNS = 24;
+  var patched = false;
+  var applied = false;
 
   function revealAllWords(section) {
     section.querySelectorAll("[data-word]").forEach(function (el) {
@@ -14,9 +13,7 @@
   }
 
   function clearIntroScrollTriggers(section) {
-    if (!window.ScrollTrigger) return false;
-
-    var killed = false;
+    if (!window.ScrollTrigger) return;
 
     window.ScrollTrigger.getAll().forEach(function (st) {
       var trigger = st.trigger;
@@ -29,15 +26,8 @@
 
       if (isIntroTrigger) {
         st.kill(true);
-        killed = true;
       }
     });
-
-    if (killed) {
-      window.ScrollTrigger.refresh();
-    }
-
-    return killed;
   }
 
   function resetSectionLayout(section) {
@@ -45,21 +35,8 @@
     section.style.height = "auto";
   }
 
-  function applyIntroMobileFix() {
-    if (!MQ.matches) return;
-
-    var section = document.getElementById("intro-reveal");
-    if (!section) return;
-
-    revealAllWords(section);
-    clearIntroScrollTriggers(section);
-    resetSectionLayout(section);
-  }
-
-  window.swingIntroMobileFix = applyIntroMobileFix;
-
   function patchScrollTriggerOnMobile() {
-    if (!MQ.matches || !window.ScrollTrigger || window.ScrollTrigger.__swingIntroPatched) return;
+    if (!MQ.matches || patched || !window.ScrollTrigger) return;
 
     var section = document.getElementById("intro-reveal");
     if (!section) return;
@@ -88,46 +65,28 @@
       return originalCreate(vars);
     };
 
-    window.ScrollTrigger.__swingIntroPatched = true;
+    patched = true;
   }
 
-  function stopPolling() {
-    if (pollId) {
-      window.clearInterval(pollId);
-      pollId = null;
-    }
-    pollRuns = 0;
-  }
-
-  function startPolling() {
+  function applyIntroMobileFix() {
     if (!MQ.matches) return;
-    stopPolling();
 
-    pollId = window.setInterval(function () {
-      applyIntroMobileFix();
-      pollRuns += 1;
-      if (pollRuns >= MAX_POLL_RUNS) {
-        stopPolling();
-      }
-    }, 500);
+    var section = document.getElementById("intro-reveal");
+    if (!section) return;
+
+    patchScrollTriggerOnMobile();
+    revealAllWords(section);
+    clearIntroScrollTriggers(section);
+    resetSectionLayout(section);
+    applied = true;
   }
 
-  function scheduleFixes() {
-    applyIntroMobileFix();
-    startPolling();
-    window.setTimeout(applyIntroMobileFix, 300);
-    window.setTimeout(applyIntroMobileFix, 900);
-    window.setTimeout(applyIntroMobileFix, 1800);
-    window.setTimeout(applyIntroMobileFix, 3500);
-  }
+  window.swingIntroMobileFix = applyIntroMobileFix;
 
   function init() {
-    patchScrollTriggerOnMobile();
-    scheduleFixes();
-    window.addEventListener("load", function () {
-      patchScrollTriggerOnMobile();
-      scheduleFixes();
-    });
+    if (!MQ.matches) return;
+    applyIntroMobileFix();
+    window.addEventListener("load", applyIntroMobileFix, { once: true });
   }
 
   if (document.readyState === "loading") {
@@ -136,21 +95,10 @@
     init();
   }
 
-  patchScrollTriggerOnMobile();
-
   if (typeof MQ.addEventListener === "function") {
     MQ.addEventListener("change", function () {
-      stopPolling();
-      patchScrollTriggerOnMobile();
+      applied = false;
       applyIntroMobileFix();
-      if (MQ.matches) startPolling();
-    });
-  } else if (typeof MQ.addListener === "function") {
-    MQ.addListener(function () {
-      stopPolling();
-      patchScrollTriggerOnMobile();
-      applyIntroMobileFix();
-      if (MQ.matches) startPolling();
     });
   }
 })();
