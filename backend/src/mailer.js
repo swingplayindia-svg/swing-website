@@ -3,8 +3,16 @@ import { isResendConfigured, sendResendMail } from "./resend-mail.js";
 
 const smtpRequired = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "MAIL_FROM"];
 
+function isRailway() {
+  return Boolean(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
+}
+
 function isSmtpConfigured() {
   return smtpRequired.every((key) => Boolean(process.env[key]?.trim()));
+}
+
+function canUseSmtp() {
+  return isSmtpConfigured() && !isRailway();
 }
 
 function getSmtpConfig() {
@@ -21,9 +29,9 @@ function getSmtpConfig() {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 8000,
   };
 }
 
@@ -31,11 +39,16 @@ let transporter;
 
 export function getEmailProvider() {
   if (isResendConfigured()) return "resend";
-  if (isSmtpConfigured()) return "smtp";
+  if (canUseSmtp()) return "smtp";
+  if (isRailway()) return "none (set RESEND_API_KEY on Railway)";
   return "none";
 }
 
-export function getTransporter() {
+export function isEmailConfigured() {
+  return isResendConfigured() || canUseSmtp();
+}
+
+function getTransporter() {
   if (!transporter) {
     transporter = nodemailer.createTransport(getSmtpConfig());
   }
@@ -47,7 +60,11 @@ export async function verifyEmailConnection() {
     return { provider: "resend", ok: true };
   }
 
-  if (!isSmtpConfigured()) {
+  if (isRailway()) {
+    throw new Error("Set RESEND_API_KEY on Railway. SMTP is blocked on Railway.");
+  }
+
+  if (!canUseSmtp()) {
     throw new Error("No email provider configured. Set RESEND_API_KEY or SMTP_* vars.");
   }
 
@@ -80,9 +97,25 @@ export async function sendMail({ to, subject, text, html, replyTo }) {
     });
   }
 
-  if (isSmtpConfigured()) {
+  if (isRailway()) {
+    throw new Error("RESEND_API_KEY is required on Railway. SMTP is blocked.");
+  }
+
+  if (canUseSmtp()) {
     return sendViaSmtp({ to, subject, text, html, replyTo });
   }
 
   throw new Error("No email provider configured. Set RESEND_API_KEY or SMTP_* vars.");
+}
+
+/** Fire-and-forget — never blocks the HTTP response. */
+export function sendMailInBackground(payload, label) {
+  if (!isEmailConfigured()) {
+    console.warn(`[email] Skipped ${label}: no provider configured.`);
+    return;
+  }
+
+  void sendMail(payload).catch((err) => {
+    console.error(`[email] ${label} failed:`, err.message || err);
+  });
 }

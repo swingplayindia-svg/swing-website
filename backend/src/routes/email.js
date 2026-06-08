@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { waitlistAdminNotificationEmail, waitlistConfirmationEmail } from "../emails/waitlist.js";
-import { sendMail } from "../mailer.js";
+import { isEmailConfigured, sendMailInBackground } from "../mailer.js";
 import { isFirebaseConfigured } from "../firebase.js";
 import { saveWaitlistEntry } from "../waitlist.js";
 
@@ -18,6 +18,34 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function queueWaitlistEmails(saved, source) {
+  const confirmation = waitlistConfirmationEmail(saved.email);
+
+  sendMailInBackground(
+    {
+      to: saved.email,
+      subject: confirmation.subject,
+      text: confirmation.text,
+      html: confirmation.html,
+      replyTo: process.env.MAIL_TO || "swingplay.india@gmail.com",
+    },
+    "waitlist confirmation",
+  );
+
+  if (saved.created) {
+    const adminNotice = waitlistAdminNotificationEmail(saved.email, source);
+    sendMailInBackground(
+      {
+        subject: adminNotice.subject,
+        replyTo: saved.email,
+        text: adminNotice.text,
+        html: adminNotice.html,
+      },
+      "waitlist admin notification",
+    );
+  }
 }
 
 async function handleWaitlistSignup({ email, source, res }) {
@@ -39,38 +67,14 @@ async function handleWaitlistSignup({ email, source, res }) {
     });
   }
 
-  const confirmation = waitlistConfirmationEmail(saved.email);
-
-  try {
-    await sendMail({
-      to: saved.email,
-      subject: confirmation.subject,
-      text: confirmation.text,
-      html: confirmation.html,
-      replyTo: process.env.MAIL_FROM || process.env.SMTP_USER,
-    });
-  } catch (err) {
-    console.error("Waitlist confirmation email failed:", err);
-  }
-
-  if (saved.created) {
-    const adminNotice = waitlistAdminNotificationEmail(saved.email, source);
-    try {
-      await sendMail({
-        subject: adminNotice.subject,
-        replyTo: saved.email,
-        text: adminNotice.text,
-        html: adminNotice.html,
-      });
-    } catch (err) {
-      console.error("Waitlist admin notification failed:", err);
-    }
-  }
+  queueWaitlistEmails(saved, source);
 
   return res.json({
     ok: true,
     message: saved.created
-      ? "Thanks — you're on the waitlist. Check your inbox for a confirmation."
+      ? isEmailConfigured()
+        ? "Thanks — you're on the waitlist. Check your inbox for a confirmation."
+        : "Thanks — you're on the waitlist. We'll be in touch soon."
       : "You're already on the waitlist. We'll keep you posted.",
     created: saved.created,
   });
@@ -120,8 +124,15 @@ router.post("/contact", async (req, res) => {
     return res.status(400).json({ ok: false, error: "Message is required." });
   }
 
-  try {
-    await sendMail({
+  if (!isEmailConfigured()) {
+    return res.status(503).json({
+      ok: false,
+      error: "Email service is not configured. Please email swingplay.india@gmail.com directly.",
+    });
+  }
+
+  sendMailInBackground(
+    {
       subject: `[SWING Contact] ${subject}`,
       replyTo: email,
       text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\n${message}`,
@@ -133,13 +144,11 @@ router.post("/contact", async (req, res) => {
         <p><strong>Message:</strong></p>
         <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
       `,
-    });
+    },
+    "contact form",
+  );
 
-    return res.json({ ok: true, message: "Message sent successfully." });
-  } catch (err) {
-    console.error("Contact email failed:", err);
-    return res.status(500).json({ ok: false, error: "Could not send email. Try again later." });
-  }
+  return res.json({ ok: true, message: "Message sent successfully." });
 });
 
 export default router;

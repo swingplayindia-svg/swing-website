@@ -3,7 +3,7 @@ import cors from "cors";
 import express from "express";
 import emailRoutes from "./routes/email.js";
 import { isFirebaseConfigured } from "./firebase.js";
-import { getEmailProvider, verifyEmailConnection } from "./mailer.js";
+import { getEmailProvider, isEmailConfigured, verifyEmailConnection } from "./mailer.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
@@ -23,6 +23,7 @@ app.get("/health", (_req, res) => {
     service: "swing-api",
     firebase: isFirebaseConfigured(),
     email: getEmailProvider(),
+    emailReady: isEmailConfigured(),
   });
 });
 

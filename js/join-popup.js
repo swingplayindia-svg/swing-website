@@ -91,10 +91,15 @@
 
         window.swingWaitlistApi
           .submitWaitlistEmail(email, "join-popup")
-          .then(function () {
+          .then(function (data) {
             form.hidden = true;
-            if (successEl) successEl.hidden = false;
-            window.setTimeout(closePopup, 2400);
+            if (successEl) {
+              successEl.textContent =
+                (data && data.message) ||
+                "Thanks! You're on the waitlist.";
+              successEl.hidden = false;
+            }
+            window.setTimeout(closePopup, 1200);
           })
           .catch(function (err) {
             showError(err.message || "Could not join the waitlist.");
