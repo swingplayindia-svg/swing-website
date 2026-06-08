@@ -804,3 +804,68 @@ body.join-popup-open {
   font-weight: 600;
   line-height: 1.5;
 }
+
+.contact-waitlist {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 28rem;
+  margin-top: 0.75rem;
+}
+
+.contact-waitlist__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.contact-waitlist__input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0.75rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.contact-waitlist__input:focus {
+  outline: 2px solid rgba(1, 107, 4, 0.35);
+  border-color: #016B04;
+}
+
+.contact-waitlist__submit {
+  justify-self: start;
+  border: 0;
+  border-radius: 999px;
+  background: #016B04;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.8rem 1.25rem;
+  cursor: pointer;
+}
+
+.contact-waitlist__submit:hover {
+  background: #015503;
+}
+
+.contact-waitlist__submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.contact-waitlist__error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.875rem;
+}
+
+.contact-waitlist__success {
+  margin: 0;
+  color: #016B04;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.contact-waitlist__error[hidden],
+.contact-waitlist__success[hidden] {
+  display: none !important;
+}

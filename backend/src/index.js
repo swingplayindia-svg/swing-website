@@ -2,6 +2,7 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import emailRoutes from "./routes/email.js";
+import { isFirebaseConfigured } from "./firebase.js";
 import { verifySmtpConnection } from "./mailer.js";
 
 const app = express();
@@ -17,7 +18,11 @@ app.use(
 app.use(express.json({ limit: "32kb" }));
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "swing-smtp" });
+  res.json({
+    ok: true,
+    service: "swing-smtp",
+    firebase: isFirebaseConfigured(),
+  });
 });
 
 app.use("/api", emailRoutes);
@@ -39,5 +44,11 @@ app.listen(port, async () => {
     console.log("SMTP connection verified");
   } catch (err) {
     console.warn("SMTP not ready — check backend/.env:", err.message);
+  }
+
+  if (!isFirebaseConfigured()) {
+    console.warn("Firebase Admin not configured — waitlist signups will fail until env is set.");
+  } else {
+    console.log("Firebase Admin configured for waitlist storage");
   }
 });

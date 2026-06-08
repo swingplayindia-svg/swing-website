@@ -12,12 +12,19 @@
     var input = popup.querySelector("#join-email");
     var errorEl = popup.querySelector(".join-popup__error");
     var successEl = popup.querySelector(".join-popup__success");
+    var submitBtn = popup.querySelector(".join-popup__submit");
     var lastFocus = null;
 
     function showError(message) {
       if (!errorEl) return;
       errorEl.textContent = message;
       errorEl.hidden = !message;
+    }
+
+    function setSubmitting(isSubmitting) {
+      if (!submitBtn) return;
+      submitBtn.disabled = isSubmitting;
+      submitBtn.textContent = isSubmitting ? "Submitting..." : "Submit";
     }
 
     function openPopup() {
@@ -29,6 +36,7 @@
       if (successEl) successEl.hidden = true;
       showError("");
       if (form) form.reset();
+      setSubmitting(false);
       window.setTimeout(function () {
         if (input) input.focus();
       }, 50);
@@ -39,6 +47,7 @@
       popup.setAttribute("aria-hidden", "true");
       document.body.classList.remove("join-popup-open");
       showError("");
+      setSubmitting(false);
       if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
     }
 
@@ -72,18 +81,27 @@
           return;
         }
 
-        showError("");
-        try {
-          var list = JSON.parse(localStorage.getItem("swing-join-emails") || "[]");
-          if (list.indexOf(email) === -1) list.push(email);
-          localStorage.setItem("swing-join-emails", JSON.stringify(list));
-        } catch (err) {
-          /* ignore storage errors */
+        if (!window.swingWaitlistApi) {
+          showError("Waitlist service is unavailable. Please try again later.");
+          return;
         }
 
-        form.hidden = true;
-        if (successEl) successEl.hidden = false;
-        window.setTimeout(closePopup, 2400);
+        showError("");
+        setSubmitting(true);
+
+        window.swingWaitlistApi
+          .submitWaitlistEmail(email, "join-popup")
+          .then(function () {
+            form.hidden = true;
+            if (successEl) successEl.hidden = false;
+            window.setTimeout(closePopup, 2400);
+          })
+          .catch(function (err) {
+            showError(err.message || "Could not join the waitlist.");
+          })
+          .finally(function () {
+            setSubmitting(false);
+          });
       });
     }
 
