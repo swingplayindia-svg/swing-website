@@ -1,9 +1,14 @@
 import nodemailer from "nodemailer";
+import { isResendConfigured, sendResendMail } from "./resend-mail.js";
 
-const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "MAIL_FROM"];
+const smtpRequired = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "MAIL_FROM"];
 
-function getConfig() {
-  const missing = required.filter((key) => !process.env[key]);
+function isSmtpConfigured() {
+  return smtpRequired.every((key) => Boolean(process.env[key]?.trim()));
+}
+
+function getSmtpConfig() {
+  const missing = smtpRequired.filter((key) => !process.env[key]?.trim());
   if (missing.length) {
     throw new Error(`Missing SMTP env vars: ${missing.join(", ")}`);
   }
@@ -16,23 +21,41 @@ function getConfig() {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   };
 }
 
 let transporter;
 
+export function getEmailProvider() {
+  if (isResendConfigured()) return "resend";
+  if (isSmtpConfigured()) return "smtp";
+  return "none";
+}
+
 export function getTransporter() {
   if (!transporter) {
-    transporter = nodemailer.createTransport(getConfig());
+    transporter = nodemailer.createTransport(getSmtpConfig());
   }
   return transporter;
 }
 
-export async function verifySmtpConnection() {
+export async function verifyEmailConnection() {
+  if (isResendConfigured()) {
+    return { provider: "resend", ok: true };
+  }
+
+  if (!isSmtpConfigured()) {
+    throw new Error("No email provider configured. Set RESEND_API_KEY or SMTP_* vars.");
+  }
+
   await getTransporter().verify();
+  return { provider: "smtp", ok: true };
 }
 
-export async function sendMail({ to, subject, text, html, replyTo }) {
+async function sendViaSmtp({ to, subject, text, html, replyTo }) {
   const mailTo = to || process.env.MAIL_TO || process.env.SMTP_USER;
 
   return getTransporter().sendMail({
@@ -43,4 +66,23 @@ export async function sendMail({ to, subject, text, html, replyTo }) {
     text,
     html,
   });
+}
+
+export async function sendMail({ to, subject, text, html, replyTo }) {
+  if (isResendConfigured()) {
+    const mailTo = to || process.env.MAIL_TO || process.env.SMTP_USER;
+    return sendResendMail({
+      to: mailTo,
+      subject,
+      text,
+      html,
+      replyTo: replyTo || process.env.MAIL_TO || "swingplay.india@gmail.com",
+    });
+  }
+
+  if (isSmtpConfigured()) {
+    return sendViaSmtp({ to, subject, text, html, replyTo });
+  }
+
+  throw new Error("No email provider configured. Set RESEND_API_KEY or SMTP_* vars.");
 }
