@@ -38,10 +38,12 @@ function escapeHtml(value) {
 }
 
 function queueWaitlistEmails(saved) {
-  if (!canSendToRecipient(saved.email)) {
+  const allowSend = saved.testOnly || canSendToRecipient(saved.email);
+
+  if (!allowSend) {
     if (isResendSandbox()) {
       console.warn(
-        `[email] Skipped waitlist confirmation to ${saved.email} — verify swing-play.com in Resend to email any address.`,
+        `[email] Skipped waitlist confirmation to ${saved.email} — set MAIL_FROM to SWING <hello@swing-play.com> on Railway (domain is verified, but sender is still onboarding@resend.dev).`,
       );
     }
     return;
@@ -60,7 +62,7 @@ function queueWaitlistEmails(saved) {
   );
 }
 
-function waitlistSuccessMessage(created, email) {
+function waitlistSuccessMessage(created, email, testOnly = false) {
   if (!created) {
     return "You're already on the waitlist. We'll keep you posted.";
   }
@@ -69,7 +71,7 @@ function waitlistSuccessMessage(created, email) {
     return "Thanks — you're on the waitlist. We'll be in touch soon.";
   }
 
-  if (canSendToRecipient(email)) {
+  if (testOnly || canSendToRecipient(email)) {
     return "Thanks — you're on the waitlist. Check your inbox for a confirmation.";
   }
 
@@ -98,7 +100,7 @@ async function handleWaitlistSignup({ email, source, res }) {
 
     return res.json({
       ok: true,
-      message: waitlistSuccessMessage(true, normalizedEmail),
+      message: waitlistSuccessMessage(true, normalizedEmail, true),
       created: true,
       testOnly: true,
     });

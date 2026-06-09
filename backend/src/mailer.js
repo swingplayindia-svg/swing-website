@@ -6,7 +6,7 @@ const BLOCKED_FROM_DOMAINS = ["gmail.com", "googlemail.com", "yahoo.com", "hotma
 
 let resend;
 
-function getMailFrom() {
+export function getMailFrom() {
   return process.env.MAIL_FROM?.trim() || "";
 }
 

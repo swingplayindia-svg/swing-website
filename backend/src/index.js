@@ -5,6 +5,7 @@ import emailRoutes from "./routes/email.js";
 import { isFirebaseConfigured } from "./firebase.js";
 import {
   getEmailProvider,
+  getMailFrom,
   getMailFromIssue,
   isEmailConfigured,
   isResendSandbox,
@@ -53,9 +54,11 @@ app.listen(port, async () => {
   try {
     const status = await verifyEmailConnection();
     if (status.sandbox) {
-      console.log(`Resend email ready (test mode — user confirmations only go to MAIL_TO until your domain is verified)`);
+      console.warn(
+        "EMAIL: swing-play.com is verified in Resend, but MAIL_FROM is still onboarding@resend.dev — update Railway to: MAIL_FROM=SWING <hello@swing-play.com>",
+      );
     } else {
-      console.log(`Resend email ready (${status.provider})`);
+      console.log(`Resend email ready (${status.provider}) — sending from ${getMailFrom()}`);
     }
   } catch (err) {
     console.error("EMAIL NOT CONFIGURED:", err.message);
