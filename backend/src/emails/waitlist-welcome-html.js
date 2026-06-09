@@ -28,43 +28,121 @@ const SPORTS = [
 ];
 
 function sportPillsHtml() {
-  return SPORTS.map(
-    (sport) => `
-      <td style="padding:6px;">
-        <span style="display:inline-block;background:#1e2535;border:1px solid #2a3347;border-radius:20px;padding:8px 14px;font-size:13px;color:#e8eaf0;font-family:'Segoe UI',system-ui,sans-serif;white-space:nowrap;">
-          ${sport.icon}&nbsp;${escapeHtml(sport.name)}
-        </span>
-      </td>`,
+  const rows = [SPORTS.slice(0, 9), SPORTS.slice(9)];
+  return rows
+    .map(
+      (row) => `
+    <tr>
+      ${row
+        .map(
+          (sport) => `
+        <td style="padding:4px 3px;">
+          <span style="
+            display:inline-block;
+            background:#f0fdf4;
+            border:1px solid #bbf7d0;
+            border-radius:100px;
+            padding:7px 14px;
+            font-size:12px;
+            color:#166534;
+            font-family:'Segoe UI',system-ui,sans-serif;
+            white-space:nowrap;
+            font-weight:500;
+          ">${sport.icon}&nbsp;${escapeHtml(sport.name)}</span>
+        </td>`,
+        )
+        .join("")}
+    </tr>`,
+    )
+    .join("");
+}
+
+const STEPS = [
+  {
+    num: "01",
+    title: "You're confirmed",
+    body: "Your spot is secured. We'll never spam you.",
+  },
+  {
+    num: "02",
+    title: "Early access invite",
+    body: "You'll receive a private invite before the public launch.",
+  },
+  {
+    num: "03",
+    title: "Play every game",
+    body: "Explore leagues, athletes & live stats across 18 sports.",
+  },
+];
+
+function stepsHtml() {
+  return STEPS.map(
+    (step, i) => `
+    <td width="33%" style="padding:0 8px;vertical-align:top;">
+      <div style="
+        background:#f0fdf4;
+        border:1px solid #bbf7d0;
+        border-radius:12px;
+        padding:20px 18px;
+      ">
+        <div style="
+          font-size:11px;
+          font-weight:800;
+          color:#16a34a;
+          font-family:'Segoe UI',system-ui,sans-serif;
+          letter-spacing:0.1em;
+          margin-bottom:10px;
+        ">${step.num}</div>
+        <div style="font-size:14px;font-weight:700;color:#14532d;margin-bottom:6px;font-family:'Segoe UI',system-ui,sans-serif;">${escapeHtml(step.title)}</div>
+        <div style="font-size:12px;color:#4b7a5e;line-height:1.55;font-family:'Segoe UI',system-ui,sans-serif;">${escapeHtml(step.body)}</div>
+      </div>
+    </td>`,
   ).join("");
 }
 
 export function buildWaitlistWelcomeHtml(email) {
   const safeEmail = escapeHtml(email);
+  const confirmationId = `SWG-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to SWING</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>You're on the SWING waitlist</title>
 </head>
-<body style="margin:0;padding:0;background:#0d0f14;color:#e8eaf0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0f14;">
+<body style="margin:0;padding:0;background:#f6f8f6;-webkit-font-smoothing:antialiased;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f6f8f6">
     <tr>
-      <td align="center" style="padding:32px 16px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#161b25;border:1px solid #2a3347;border-radius:16px;overflow:hidden;">
+      <td align="center" style="padding:40px 16px 48px;">
+
+        <!-- Card -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+          style="max-width:600px;background:#ffffff;border:1px solid #e2e8e2;border-radius:16px;overflow:hidden;">
+
+          <!-- Top green bar -->
+          <tr>
+            <td style="height:4px;background:linear-gradient(90deg,#16a34a,#22c55e,#4ade80);"></td>
+          </tr>
 
           <!-- Header -->
           <tr>
-            <td style="padding:28px 32px 20px;background:linear-gradient(135deg,#0d0f14 0%,#1a1f2e 100%);border-bottom:1px solid #2a3347;">
+            <td style="padding:24px 36px;border-bottom:1px solid #f0f4f0;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <div style="font-size:28px;font-weight:800;letter-spacing:-1px;color:#f0a500;line-height:1.1;">⚡ SWING</div>
-                    <div style="font-size:14px;color:#8892a4;margin-top:6px;">Sports Reference Guide · Waitlist</div>
+                    <span style="font-size:20px;font-weight:900;color:#15803d;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:-0.3px;">⚡ SWING</span>
                   </td>
-                  <td align="right" valign="top">
-                    <span style="display:inline-block;background:#f0a500;color:#000;font-weight:700;font-size:12px;padding:4px 10px;border-radius:20px;">18 Sports</span>
+                  <td align="right" valign="middle">
+                    <span style="
+                      font-size:11px;
+                      font-weight:600;
+                      color:#6b8c6b;
+                      font-family:'Segoe UI',system-ui,sans-serif;
+                      letter-spacing:0.06em;
+                      text-transform:uppercase;
+                    ">Sports Reference Guide</span>
                   </td>
                 </tr>
               </table>
@@ -73,100 +151,169 @@ export function buildWaitlistWelcomeHtml(email) {
 
           <!-- Hero -->
           <tr>
-            <td style="padding:32px 32px 24px;">
-              <h1 style="margin:0 0 12px;font-size:32px;font-weight:800;line-height:1.15;color:#ffffff;letter-spacing:-0.5px;">
-                You're on the <span style="color:#22c55e;">waitlist</span>
+            <td style="padding:48px 36px 36px;">
+
+              <!-- Badge -->
+              <div style="margin-bottom:22px;">
+                <span style="
+                  display:inline-flex;
+                  align-items:center;
+                  gap:6px;
+                  background:#dcfce7;
+                  border:1px solid #bbf7d0;
+                  border-radius:100px;
+                  padding:7px 16px;
+                  font-size:12px;
+                  font-weight:700;
+                  color:#15803d;
+                  font-family:'Segoe UI',system-ui,sans-serif;
+                  letter-spacing:0.06em;
+                  text-transform:uppercase;
+                ">
+                  <span style="
+                    display:inline-block;
+                    width:7px;height:7px;
+                    background:#22c55e;
+                    border-radius:50%;
+                  "></span>
+                  Waitlist Confirmed
+                </span>
+              </div>
+
+              <!-- Headline -->
+              <h1 style="
+                margin:0 0 14px;
+                font-size:36px;
+                font-weight:900;
+                line-height:1.12;
+                color:#0f1f0f;
+                letter-spacing:-1px;
+                font-family:'Segoe UI',system-ui,sans-serif;
+              ">
+                Your spot is<br>
+                <span style="color:#16a34a;">locked in.</span>
               </h1>
-              <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:#8892a4;">
-                Thanks for joining SWING — a passionate community playing sports loved by millions.
-                We'll email you when the app is ready and share early updates along the way.
+
+              <!-- Body -->
+              <p style="
+                margin:0 0 32px;
+                font-size:15px;
+                line-height:1.75;
+                color:#4b5e4b;
+                font-family:'Segoe UI',system-ui,sans-serif;
+                max-width:460px;
+              ">
+                Welcome to SWING — the definitive sports reference platform for fans who take their game seriously.
+                We're putting the finishing touches on something special.
               </p>
+
+              <!-- CTA -->
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="background:#016B04;border-radius:10px;padding:14px 24px;">
-                    <span style="font-size:15px;font-weight:700;color:#ffffff;letter-spacing:0.03em;text-transform:uppercase;">Play Every Game</span>
+                  <td style="background:#16a34a;border-radius:10px;padding:14px 30px;">
+                    <span style="font-size:13px;font-weight:800;color:#ffffff;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:0.06em;text-transform:uppercase;">Play Every Game</span>
                   </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Confirmation strip -->
+          <tr>
+            <td style="padding:0 36px 36px;">
+              <div style="
+                background:#f0fdf4;
+                border:1px solid #bbf7d0;
+                border-radius:10px;
+                padding:16px 20px;
+              ">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td>
+                      <div style="font-size:10px;font-weight:700;color:#86b896;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;">Confirmation ID</div>
+                      <div style="font-size:17px;font-weight:800;color:#15803d;font-family:'Courier New',monospace;letter-spacing:0.08em;">${confirmationId}</div>
+                    </td>
+                    <td align="right" valign="middle">
+                      <div style="font-size:10px;color:#86b896;font-family:'Segoe UI',system-ui,sans-serif;text-align:right;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.06em;">Registered as</div>
+                      <div style="font-size:13px;font-weight:600;color:#2d5a3d;font-family:'Segoe UI',system-ui,sans-serif;">${safeEmail}</div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f4f0;"></div></td></tr>
+
+          <!-- What's next -->
+          <tr>
+            <td style="padding:36px 28px 36px;">
+              <div style="font-size:11px;font-weight:700;color:#16a34a;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:20px;padding:0 8px;">What happens next</div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  ${stepsHtml()}
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Sports preview -->
+          <!-- Divider -->
+          <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f4f0;"></div></td></tr>
+
+          <!-- Sports section -->
           <tr>
-            <td style="padding:0 32px 8px;">
-              <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f0a500;margin-bottom:14px;">
-                🏆 What's coming
-              </div>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:#c5cad4;">
-                Discover leagues, teams, and athletes across 18 sports — from padel and pickleball to cricket, F1, esports, and more.
+            <td style="padding:36px 36px 16px;">
+              <div style="font-size:11px;font-weight:700;color:#16a34a;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">18 sports. One platform.</div>
+              <p style="margin:0 0 20px;font-size:14px;color:#4b5e4b;font-family:'Segoe UI',system-ui,sans-serif;line-height:1.6;">
+                Every league, team, and athlete — from padel courts to IPL pitches.
               </p>
             </td>
           </tr>
 
           <tr>
-            <td style="padding:0 24px 28px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>${sportPillsHtml()}</tr>
+            <td style="padding:0 32px 36px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                ${sportPillsHtml()}
               </table>
             </td>
           </tr>
 
-          <!-- Featured sports cards -->
-          <tr>
-            <td style="padding:0 32px 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="50%" style="padding:6px;vertical-align:top;">
-                    <div style="background:#1e2535;border:1px solid #2a3347;border-radius:12px;padding:16px;">
-                      <div style="font-size:24px;margin-bottom:8px;">⚽</div>
-                      <div style="font-size:15px;font-weight:700;color:#ffffff;">Football</div>
-                      <div style="font-size:12px;color:#8892a4;margin-top:4px;">Premier League · La Liga · ISL</div>
-                    </div>
-                  </td>
-                  <td width="50%" style="padding:6px;vertical-align:top;">
-                    <div style="background:#1e2535;border:1px solid #2a3347;border-radius:12px;padding:16px;">
-                      <div style="font-size:24px;margin-bottom:8px;">🏏</div>
-                      <div style="font-size:15px;font-weight:700;color:#ffffff;">Cricket</div>
-                      <div style="font-size:12px;color:#8892a4;margin-top:4px;">IPL · T20 World Cup · The Ashes</div>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td width="50%" style="padding:6px;vertical-align:top;">
-                    <div style="background:#1e2535;border:1px solid #2a3347;border-radius:12px;padding:16px;">
-                      <div style="font-size:24px;margin-bottom:8px;">🎾</div>
-                      <div style="font-size:15px;font-weight:700;color:#ffffff;">Padel</div>
-                      <div style="font-size:12px;color:#8892a4;margin-top:4px;">Premier Padel · World Padel Tour</div>
-                    </div>
-                  </td>
-                  <td width="50%" style="padding:6px;vertical-align:top;">
-                    <div style="background:#1e2535;border:1px solid #2a3347;border-radius:12px;padding:16px;">
-                      <div style="font-size:24px;margin-bottom:8px;">🏓</div>
-                      <div style="font-size:15px;font-weight:700;color:#ffffff;">Pickleball</div>
-                      <div style="font-size:12px;color:#8892a4;margin-top:4px;">MLP · PPA Tour · US Open</div>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+          <!-- Divider -->
+          <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f4f0;"></div></td></tr>
 
           <!-- Footer -->
           <tr>
-            <td style="padding:24px 32px 28px;border-top:1px solid #2a3347;background:#0d0f14;">
-              <p style="margin:0 0 8px;font-size:14px;color:#8892a4;">
-                Registered as <strong style="color:#e8eaf0;">${safeEmail}</strong>
-              </p>
-              <p style="margin:0;font-size:13px;line-height:1.5;color:#5c6578;">
-                Team SWING · Move fast. Stay collaborative.
-              </p>
+            <td style="padding:24px 36px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="font-size:15px;font-weight:900;color:#15803d;font-family:'Segoe UI',system-ui,sans-serif;margin-bottom:3px;">⚡ SWING</div>
+                    <div style="font-size:12px;color:#9ab09a;font-family:'Segoe UI',system-ui,sans-serif;">Move fast. Stay collaborative.</div>
+                  </td>
+                  <td align="right" valign="middle">
+                    <div style="font-size:11px;color:#9ab09a;font-family:'Segoe UI',system-ui,sans-serif;text-align:right;line-height:1.65;">
+                      You received this because<br>you joined the SWING waitlist.
+                    </div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
+          <!-- Bottom green bar -->
+          <tr>
+            <td style="height:3px;background:linear-gradient(90deg,#4ade80,#22c55e,#16a34a);"></td>
+          </tr>
+
         </table>
+        <!-- /Card -->
+
       </td>
     </tr>
   </table>
+
 </body>
 </html>`;
 }
