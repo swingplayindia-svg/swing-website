@@ -12,6 +12,20 @@ function emailDocId(email) {
   return normalizeEmail(email).replace(/[^a-z0-9@._+-]/g, "_");
 }
 
+export async function deleteWaitlistEntry(email) {
+  if (!isFirebaseConfigured()) return false;
+
+  const normalizedEmail = normalizeEmail(email);
+  const db = getAdminDb();
+  const ref = db.collection(WAITLIST_COLLECTION).doc(emailDocId(normalizedEmail));
+  const existing = await ref.get();
+
+  if (!existing.exists) return false;
+
+  await ref.delete();
+  return true;
+}
+
 export async function saveWaitlistEntry({ email, source = "website" }) {
   if (!isFirebaseConfigured()) {
     throw new Error("Firebase is not configured.");

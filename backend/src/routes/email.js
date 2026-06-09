@@ -8,11 +8,22 @@ import {
   sendMailInBackground,
 } from "../mailer.js";
 import { isFirebaseConfigured } from "../firebase.js";
-import { saveWaitlistEntry } from "../waitlist.js";
+import { deleteWaitlistEntry, saveWaitlistEntry } from "../waitlist.js";
 
 const router = Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const WAITLIST_TEST_EMAILS = new Set(
+  (process.env.WAITLIST_TEST_EMAILS || "devansh.saxena@thesouledstore.com")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+function isWaitlistTestEmail(email) {
+  return WAITLIST_TEST_EMAILS.has(String(email || "").trim().toLowerCase());
+}
 
 function isValidEmail(value) {
   return EMAIL_RE.test(String(value || "").trim());
@@ -76,6 +87,33 @@ function waitlistSuccessMessage(created, email) {
 }
 
 async function handleWaitlistSignup({ email, source, res }) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+
+  if (isWaitlistTestEmail(normalizedEmail)) {
+    if (isFirebaseConfigured()) {
+      try {
+        const removed = await deleteWaitlistEntry(normalizedEmail);
+        if (removed) {
+          console.log(`[waitlist] removed prior test entry: ${normalizedEmail}`);
+        }
+      } catch (err) {
+        console.warn(`[waitlist] could not clean test entry for ${normalizedEmail}:`, err.message);
+      }
+    }
+
+    const saved = { created: true, email: normalizedEmail, testOnly: true };
+    console.log(`[waitlist] test-only signup (no DB write): ${normalizedEmail}`);
+
+    queueWaitlistEmails(saved, source);
+
+    return res.json({
+      ok: true,
+      message: waitlistSuccessMessage(true, normalizedEmail),
+      created: true,
+      testOnly: true,
+    });
+  }
+
   if (!isFirebaseConfigured()) {
     return res.status(503).json({
       ok: false,
