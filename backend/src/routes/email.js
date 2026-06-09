@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { waitlistAdminNotificationEmail, waitlistConfirmationEmail } from "../emails/waitlist.js";
+import { waitlistConfirmationEmail } from "../emails/waitlist.js";
 import {
   canSendToRecipient,
   getMailFromIssue,
@@ -37,37 +37,27 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
-function queueWaitlistEmails(saved, source) {
-  if (canSendToRecipient(saved.email)) {
-    const confirmation = waitlistConfirmationEmail(saved.email);
-    sendMailInBackground(
-      {
-        to: saved.email,
-        subject: confirmation.subject,
-        text: confirmation.text,
-        html: confirmation.html,
-        replyTo: process.env.MAIL_TO || "swingplay.india@gmail.com",
-      },
-      "waitlist confirmation",
-    );
-  } else if (isResendSandbox()) {
-    console.warn(
-      `[email] Skipped waitlist confirmation to ${saved.email} — Resend test mode only delivers to MAIL_TO until swing-play.com is verified.`,
-    );
+function queueWaitlistEmails(saved) {
+  if (!canSendToRecipient(saved.email)) {
+    if (isResendSandbox()) {
+      console.warn(
+        `[email] Skipped waitlist confirmation to ${saved.email} — verify swing-play.com in Resend to email any address.`,
+      );
+    }
+    return;
   }
 
-  if (saved.created) {
-    const adminNotice = waitlistAdminNotificationEmail(saved.email, source);
-    sendMailInBackground(
-      {
-        subject: adminNotice.subject,
-        replyTo: saved.email,
-        text: adminNotice.text,
-        html: adminNotice.html,
-      },
-      "waitlist admin notification",
-    );
-  }
+  const confirmation = waitlistConfirmationEmail(saved.email);
+  sendMailInBackground(
+    {
+      to: saved.email,
+      subject: confirmation.subject,
+      text: confirmation.text,
+      html: confirmation.html,
+      replyTo: process.env.MAIL_REPLY_TO || process.env.MAIL_FROM,
+    },
+    "waitlist confirmation",
+  );
 }
 
 function waitlistSuccessMessage(created, email) {
@@ -104,7 +94,7 @@ async function handleWaitlistSignup({ email, source, res }) {
     const saved = { created: true, email: normalizedEmail, testOnly: true };
     console.log(`[waitlist] test-only signup (no DB write): ${normalizedEmail}`);
 
-    queueWaitlistEmails(saved, source);
+    queueWaitlistEmails(saved);
 
     return res.json({
       ok: true,
@@ -132,7 +122,7 @@ async function handleWaitlistSignup({ email, source, res }) {
     });
   }
 
-  queueWaitlistEmails(saved, source);
+  queueWaitlistEmails(saved);
 
   return res.json({
     ok: true,
