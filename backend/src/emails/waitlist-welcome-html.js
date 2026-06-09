@@ -6,33 +6,6 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
-const SPORTS = [
-  { icon: "⚽", name: "Football" },
-  { icon: "🏏", name: "Cricket" },
-  { icon: "🏀", name: "Basketball" },
-  { icon: "🎾", name: "Padel" },
-  { icon: "🏓", name: "Pickleball" },
-  { icon: "🎾", name: "Tennis" },
-  { icon: "🏸", name: "Badminton" },
-  { icon: "🏊", name: "Swimming" },
-  { icon: "🥊", name: "Combat Sports" },
-  { icon: "🏎️", name: "F1 / Karting" },
-  { icon: "🎮", name: "Esports" },
-  { icon: "⛳", name: "Golf" },
-  { icon: "🐎", name: "Polo" },
-  { icon: "🧘", name: "Yoga" },
-  { icon: "💪", name: "Gym" },
-  { icon: "🎳", name: "Bowling" },
-  { icon: "🤼", name: "Kabaddi" },
-  { icon: "🏃", name: "Running" },
-];
-
-function sportPillsHtml() {
-  return SPORTS.map(
-    (s) => `<span style="display:inline-block;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:100px;padding:6px 13px;font-size:11.5px;color:#166534;font-family:'Segoe UI',system-ui,sans-serif;white-space:nowrap;font-weight:500;margin:3px 2px;">${s.icon}&nbsp;${escapeHtml(s.name)}</span>`
-  ).join("");
-}
-
 const STEPS = [
   { num: "01", title: "You're in", body: "Spot secured. We'll never spam you." },
   { num: "02", title: "Early invite", body: "Private access before public launch." },
@@ -146,14 +119,6 @@ export function buildWaitlistWelcomeHtml(email) {
 
         <!-- Divider -->
         <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f4f0;"></div></td></tr>
-
-        <!-- Sports pills -->
-        <tr>
-          <td style="padding:28px 32px 32px;text-align:center;">
-            <div style="font-size:10px;font-weight:700;color:#22c55e;letter-spacing:0.14em;text-transform:uppercase;font-family:'Segoe UI',system-ui,sans-serif;margin-bottom:14px;">18 Sports</div>
-            <div style="line-height:2;">${sportPillsHtml()}</div>
-          </td>
-        </tr>
 
         <!-- Divider -->
         <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f4f0;"></div></td></tr>
