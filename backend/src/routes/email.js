@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { waitlistAdminNotificationEmail, waitlistConfirmationEmail } from "../emails/waitlist.js";
-import { isEmailConfigured, sendMailInBackground } from "../mailer.js";
+import {
+  canSendToRecipient,
+  getMailFromIssue,
+  isEmailConfigured,
+  isResendSandbox,
+  sendMailInBackground,
+} from "../mailer.js";
 import { isFirebaseConfigured } from "../firebase.js";
 import { saveWaitlistEntry } from "../waitlist.js";
 
@@ -21,18 +27,23 @@ function escapeHtml(value) {
 }
 
 function queueWaitlistEmails(saved, source) {
-  const confirmation = waitlistConfirmationEmail(saved.email);
-
-  sendMailInBackground(
-    {
-      to: saved.email,
-      subject: confirmation.subject,
-      text: confirmation.text,
-      html: confirmation.html,
-      replyTo: process.env.MAIL_TO || "swingplay.india@gmail.com",
-    },
-    "waitlist confirmation",
-  );
+  if (canSendToRecipient(saved.email)) {
+    const confirmation = waitlistConfirmationEmail(saved.email);
+    sendMailInBackground(
+      {
+        to: saved.email,
+        subject: confirmation.subject,
+        text: confirmation.text,
+        html: confirmation.html,
+        replyTo: process.env.MAIL_TO || "swingplay.india@gmail.com",
+      },
+      "waitlist confirmation",
+    );
+  } else if (isResendSandbox()) {
+    console.warn(
+      `[email] Skipped waitlist confirmation to ${saved.email} — Resend test mode only delivers to MAIL_TO until swing-play.com is verified.`,
+    );
+  }
 
   if (saved.created) {
     const adminNotice = waitlistAdminNotificationEmail(saved.email, source);
@@ -46,6 +57,22 @@ function queueWaitlistEmails(saved, source) {
       "waitlist admin notification",
     );
   }
+}
+
+function waitlistSuccessMessage(created, email) {
+  if (!created) {
+    return "You're already on the waitlist. We'll keep you posted.";
+  }
+
+  if (!isEmailConfigured() || getMailFromIssue()) {
+    return "Thanks — you're on the waitlist. We'll be in touch soon.";
+  }
+
+  if (canSendToRecipient(email)) {
+    return "Thanks — you're on the waitlist. Check your inbox for a confirmation.";
+  }
+
+  return "Thanks — you're on the waitlist. We'll be in touch soon.";
 }
 
 async function handleWaitlistSignup({ email, source, res }) {
@@ -71,11 +98,7 @@ async function handleWaitlistSignup({ email, source, res }) {
 
   return res.json({
     ok: true,
-    message: saved.created
-      ? isEmailConfigured()
-        ? "Thanks — you're on the waitlist. Check your inbox for a confirmation."
-        : "Thanks — you're on the waitlist. We'll be in touch soon."
-      : "You're already on the waitlist. We'll keep you posted.",
+    message: waitlistSuccessMessage(saved.created, saved.email),
     created: saved.created,
   });
 }
