@@ -12,16 +12,14 @@ fly auth whoami || fly auth login
 echo "Step 2: fly launch (skip if app already exists)"
 fly launch --no-deploy || true
 
-echo "Step 3: set secrets — edit SMTP_PASS and CORS_ORIGIN below first!"
-read -p "Gmail app password: " SMTP_PASS
+echo "Step 3: set secrets"
+read -p "Resend API key: " RESEND_API_KEY
+read -p "MAIL_FROM (e.g. SWING <hello@yourdomain.com>): " MAIL_FROM
 read -p "Your live website URL (e.g. https://yoursite.vercel.app): " CORS_ORIGIN
 
 fly secrets set \
-  SMTP_HOST=smtp.gmail.com \
-  SMTP_PORT=587 \
-  SMTP_USER=swingplay.india@gmail.com \
-  SMTP_PASS="$SMTP_PASS" \
-  MAIL_FROM=swingplay.india@gmail.com \
+  RESEND_API_KEY="$RESEND_API_KEY" \
+  MAIL_FROM="$MAIL_FROM" \
   MAIL_TO=swingplay.india@gmail.com \
   FIREBASE_PROJECT_ID=swing-b7a0c \
   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@swing-b7a0c.iam.gserviceaccount.com \

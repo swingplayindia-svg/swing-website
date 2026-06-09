@@ -1,72 +1,62 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const required = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "MAIL_FROM"];
+const required = ["RESEND_API_KEY", "MAIL_FROM"];
 
-function getConfig() {
-  const missing = required.filter((key) => !process.env[key]?.trim());
-  if (missing.length) {
-    throw new Error(`Missing SMTP env vars: ${missing.join(", ")}`);
+let resend;
+
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
   }
-
-  const port = Number(process.env.SMTP_PORT);
-
-  return {
-    host: process.env.SMTP_HOST,
-    port,
-    secure: port === 465,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 12000,
-  };
+  return resend;
 }
-
-let transporter;
 
 export function isEmailConfigured() {
   return required.every((key) => Boolean(process.env[key]?.trim()));
 }
 
 export function getEmailProvider() {
-  return isEmailConfigured() ? "nodemailer-smtp" : "none";
-}
-
-export function getTransporter() {
-  if (!transporter) {
-    transporter = nodemailer.createTransport(getConfig());
-  }
-  return transporter;
+  return isEmailConfigured() ? "resend" : "none";
 }
 
 export async function verifyEmailConnection() {
   if (!isEmailConfigured()) {
-    throw new Error("Missing SMTP env vars (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM).");
+    throw new Error("Missing email env vars (RESEND_API_KEY, MAIL_FROM).");
   }
 
-  await getTransporter().verify();
-  return { provider: "nodemailer-smtp", ok: true };
+  getResend();
+  return { provider: "resend", ok: true };
 }
 
 export async function sendMail({ to, subject, text, html, replyTo }) {
-  const mailTo = to || process.env.MAIL_TO || process.env.SMTP_USER;
+  const mailTo = to || process.env.MAIL_TO;
+  if (!mailTo) {
+    throw new Error("No email recipient (to or MAIL_TO).");
+  }
 
-  return getTransporter().sendMail({
+  const payload = {
     from: process.env.MAIL_FROM,
-    to: mailTo,
-    replyTo: replyTo || process.env.MAIL_TO || process.env.SMTP_USER,
+    to: Array.isArray(mailTo) ? mailTo : [mailTo],
     subject,
-    text,
-    html,
-  });
+  };
+
+  if (html) payload.html = html;
+  if (text) payload.text = text;
+  if (replyTo) payload.reply_to = replyTo;
+
+  const { data, error } = await getResend().emails.send(payload);
+
+  if (error) {
+    throw new Error(error.message || JSON.stringify(error));
+  }
+
+  return data;
 }
 
 /** Fire-and-forget — never blocks the HTTP response. */
 export function sendMailInBackground(payload, label) {
   if (!isEmailConfigured()) {
-    console.warn(`[email] Skipped ${label}: SMTP env vars not set.`);
+    console.warn(`[email] Skipped ${label}: RESEND_API_KEY / MAIL_FROM not set.`);
     return;
   }
 

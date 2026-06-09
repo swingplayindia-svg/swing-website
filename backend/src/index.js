@@ -43,14 +43,9 @@ app.listen(port, async () => {
 
   try {
     const status = await verifyEmailConnection();
-    console.log(`Nodemailer SMTP ready (${status.provider})`);
+    console.log(`Resend email ready (${status.provider})`);
   } catch (err) {
-    console.warn("SMTP not ready — check SMTP_* env vars:", err.message);
-    if (process.env.RAILWAY_ENVIRONMENT) {
-      console.warn(
-        "Note: Railway blocks outbound SMTP (ports 587/465). Nodemailer + Gmail works on Fly.io, Render, or a VPS — not Railway.",
-      );
-    }
+    console.warn("Email not ready — check RESEND_API_KEY and MAIL_FROM:", err.message);
   }
 
   if (!isFirebaseConfigured()) {
