@@ -6,7 +6,7 @@ let resend;
 
 function getResend() {
   if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
+    resend = new Resend(process.env.RESEND_API_KEY?.trim());
   }
   return resend;
 }
@@ -35,7 +35,7 @@ export async function sendMail({ to, subject, text, html, replyTo }) {
   }
 
   const payload = {
-    from: process.env.MAIL_FROM,
+    from: process.env.MAIL_FROM.trim(),
     to: Array.isArray(mailTo) ? mailTo : [mailTo],
     subject,
   };
